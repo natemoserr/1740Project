@@ -331,9 +331,8 @@ function generateFakeData() {
 // ══════════════════════════════════════════════════════════════════
 
 const PALETTE = ["#0072bc","#e87722","#00a86b","#c8102e","#7b2d8b","#f5c400","#00b0ca","#ff6b35"];
-const DETAIL_COLS = ["Region","County","Municipality","Client","Site Name","Site ID","PF Name","PF ID",
-  "Active Facility","Application Type","Permit Type","General Permit Type","Disposition Code",
-  "Date Received","Date Disposed","Date Expires","Permit Hyperlink"];
+const DETAIL_COLS = ["Region","County","Municipality","Client","PF ID",
+  "Active Facility","Application Type","Date Received","Date Disposed","Date Expires"];
 
 // Derive regions and years from data
 const ALL_REGIONS = [...new Set(PERMIT_DATA.map(r => r.Region))].sort();
