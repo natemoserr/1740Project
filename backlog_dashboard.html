@@ -433,11 +433,29 @@ function renderChart() {
 
   Plotly.react("chart", traces, layout, { responsive: true, displayModeBar: false });
 
+  document.getElementById("chart").on("plotly_doubleclick", () => {
+    renderChart();
+    document.getElementById("detail-title").textContent = "Permit Detail";
+    document.getElementById("detail-badge").style.display = "none";
+    document.getElementById("detail-body").innerHTML =
+        `<div class="hint">🖱️ <span><b>Click any point</b> on the chart above to inspect the underlying permit records.</span></div>`;
+  });
+
   // Attach click handler
   document.getElementById("chart").on("plotly_click", data => {
     const pt     = data.points[0];
     const year   = pt.x;
     const region = pt.data.name;
+
+    const traces = document.getElementById("chart").data;
+    const update = traces.map(t => ({
+        line:   { color: t.name === region ? PALETTE[ALL_REGIONS.indexOf(t.name) % PALETTE.length] : "#e0e0e0", width: t.name === region ? 3 : 1.5 },
+        marker: { color: t.name === region ? PALETTE[ALL_REGIONS.indexOf(t.name) % PALETTE.length] : "#e0e0e0", size: t.name === region ? 8 : 5 },
+        opacity: t.name === region ? 1 : 0.3,
+    }));
+    
+
+    update.forEach((u, i) => Plotly.restyle("chart", u, i));
     showDetail(region, year);
   });
 
