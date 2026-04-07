@@ -267,6 +267,34 @@
         <div class="hint">🖱️ <span><b>Click any point</b> on the chart above to inspect the underlying permit records.</span></div>
       </div>
     </div>
+    <div class="chart-card">
+  <h2>ACHD Permit Backlog Trend (2020–2026)</h2>
+  <div class="subtitle">Click any data point to inspect facility records</div>
+
+  <div style="display: flex; gap: 12px; margin-bottom: 1.5rem; flex-wrap: wrap;">
+    <div class="stat-box" style="flex: 1; min-width: 100px;">
+      <div class="val">7</div>
+      <div class="lbl">Years Tracked</div>
+    </div>
+    <div class="stat-box" style="flex: 1; min-width: 100px;">
+      <div class="val">8</div>
+      <div class="lbl">Peak (2024)</div>
+    </div>
+    <div class="stat-box" style="flex: 1; min-width: 100px;">
+      <div class="val">4.7</div>
+      <div class="lbl">Avg / Year</div>
+    </div>
+  </div>
+
+  <div style="position: relative; width: 100%; height: 320px;">
+    <canvas id="achdChart"></canvas>
+  </div>
+
+  <div id="achd-detail-box" style="display: none; margin-top: 1rem; background: #f4f9ff; border-left: 3px solid #0072bc; border-radius: 0 8px 8px 0; padding: 14px 16px;">
+    <div style="font-size: 13px; font-weight: 600; color: #1a3a5c; margin-bottom: 8px;" id="achd-detail-title"></div>
+    <div id="achd-detail-list" style="font-size: 12px; color: #1a3a5c; line-height: 1.9;"></div>
+  </div>
+</div>
   </div>
 
 </div>
@@ -465,8 +493,8 @@ function showDetail(region, year) {
         <tbody>${rows}</tbody>
       </table>
     </div>
-    <button class="download-btn" onclick="downloadCSV('${region}', ${year})">⬇️ Download as CSV</button>
-  `;
+  <button class="download-btn" onclick="downloadCSV('${region}', ${year})">⬇️ Download ${year} as .CSV</button>
+  <button class="download-btn" style="margin-left: 8px; background: #005a96;" onclick="downloadAllYearsCSV('${region}')">⬇️ Download .CSV all years for ${region}</button>  `;
 }
 
 // ── CSV download ──
@@ -487,8 +515,129 @@ function downloadCSV(region, year) {
   a.click();
 }
 
+// Download backlogs from all years for a specified region. (Chosen by the user)
+function downloadAllYearsCSV(region) {
+  const records = PERMIT_DATA.filter(r => r.Region === region && r.backlogged);
+  const cols = ["Region","County","Municipality","Client","Application Type",
+                "Date Received","Date Disposed","Date Expires","Disposition Year","processing_days"];
+  const header = cols.join(",");
+  const rows = records.map(r =>
+    cols.map(c => `"${(r[c] ?? "").toString().replace(/"/g, '""')}"`).join(",")
+  );
+  const csv  = [header, ...rows].join("\n");
+  const blob = new Blob([csv], { type: "text/csv" });
+  const a    = document.createElement("a");
+  a.href     = URL.createObjectURL(blob);
+  a.download = `backlog_${region}_all_years.csv`;
+  a.click();
+}
+
 // ── Init ──
 renderChart();
+</script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<script>
+const ACHD_RAW = [
+  {year:2020, facility:"Allegheny Ludlum (ATI)", location:"Brackenridge", submitted:"Never Issued", expired:"Never Issued"},
+  {year:2020, facility:"Eastman Chemical", location:"Jefferson Hills", submitted:"Never Issued", expired:"Never Issued"},
+  {year:2020, facility:"Sunoco Pittsburgh Terminal", location:"Pittsburgh", submitted:"12/30/2015", expired:"6/30/2016"},
+  {year:2020, facility:"U.S. Steel Clairton Plant", location:"Clairton", submitted:"9/26/2016", expired:"3/26/2017"},
+  {year:2020, facility:"Bellefield Boiler", location:"Pittsburgh", submitted:"6/15/2018", expired:"12/18/2018"},
+  {year:2020, facility:"University of Pittsburgh", location:"Pittsburgh", submitted:"6/19/2018", expired:"12/19/2018"},
+  {year:2021, facility:"Allegheny Ludlum (ATI)", location:"Brackenridge", submitted:"Never Issued", expired:"Never Issued"},
+  {year:2021, facility:"Eastman Chemical", location:"Jefferson Hills", submitted:"Never Issued", expired:"Never Issued"},
+  {year:2022, facility:"ATI Flat-Rolled Products", location:"Brackenridge", submitted:"Never Issued", expired:"Never Issued"},
+  {year:2022, facility:"Eastman Chemical & Resins", location:"Jefferson Hills", submitted:"Feb-22", expired:"Never Issued"},
+  {year:2022, facility:"Universal Stainless & Alloy", location:"Bridgeville", submitted:"5/20/2022", expired:"11/21/2022"},
+  {year:2022, facility:"Springdale Energy", location:"Springdale", submitted:"1/13/2022", expired:"7/27/2022"},
+  {year:2022, facility:"U.S. Steel Irvin Plant", location:"West Mifflin", submitted:"7/8/2021", expired:"12/9/2021"},
+  {year:2023, facility:"ATI Flat-Rolled Products", location:"Brackenridge", submitted:"Never Issued", expired:"Never Issued"},
+  {year:2023, facility:"Synthomer (Eastman)", location:"Jefferson Hills", submitted:"Feb-22", expired:"Never Issued"},
+  {year:2023, facility:"U.S. Steel Irvin Plant", location:"West Mifflin", submitted:"7/8/2021", expired:"12/9/2021"},
+  {year:2023, facility:"U.S. Steel Edgar Thomson", location:"Braddock", submitted:"10/13/2020", expired:"4/13/2021"},
+  {year:2023, facility:"Neville Chemical Co.", location:"Neville Island", submitted:"4/29/2020", expired:"4/13/2021"},
+  {year:2024, facility:"ATI Flat-Rolled Products", location:"Brackenridge", submitted:"Never Issued", expired:"Never Issued"},
+  {year:2024, facility:"Synthomer Jefferson Hills", location:"Jefferson Hills", submitted:"Feb-22", expired:"Never Issued"},
+  {year:2024, facility:"U.S. Steel Irvin Plant", location:"West Mifflin", submitted:"7/8/2021", expired:"12/9/2021"},
+  {year:2024, facility:"Neville Chemical Co.", location:"Neville Island", submitted:"4/29/2020", expired:"4/13/2021"},
+  {year:2024, facility:"Springdale Energy", location:"Springdale", submitted:"1/13/2022", expired:"7/27/2022"},
+  {year:2024, facility:"LHT/Neville Island Terminals", location:"Neville Island", submitted:"1/27/2022", expired:"7/27/2022"},
+  {year:2024, facility:"Energy Center North Shore", location:"Pittsburgh", submitted:"2/21/2022", expired:"8/25/2022"},
+  {year:2024, facility:"Universal Stainless & Alloy", location:"Bridgeville", submitted:"5/20/2022", expired:"11/21/2022"},
+  {year:2025, facility:"ATI Flat-Rolled Products", location:"Brackenridge", submitted:"7/10/2013", expired:"Never Issued"},
+  {year:2025, facility:"PPG Springdale", location:"Springdale", submitted:"12/8/2022", expired:"5/10/2023"},
+  {year:2025, facility:"LHT Terminals", location:"Moon Township", submitted:"12/21/2022", expired:"6/22/2023"},
+  {year:2025, facility:"Monroeville Landfill", location:"Monroeville", submitted:"2/27/2023", expired:"2/8/2024"},
+  {year:2025, facility:"Buckeye Pipeline", location:"Moon Township", submitted:"10/30/2023", expired:"5/1/2024"},
+  {year:2026, facility:"ATI Flat-Rolled Products", location:"Brackenridge", submitted:"7/10/2013", expired:"Never Issued"},
+  {year:2026, facility:"PPG Industries - Springdale", location:"Springdale", submitted:"12/8/2022", expired:"5/10/2023"},
+  {year:2026, facility:"Brunot Island Gen. Station", location:"Pittsburgh", submitted:"2/23/2024", expired:"8/26/2019"},
+  {year:2026, facility:"PACT (Allegheny Thermal)", location:"Pittsburgh", submitted:"3/6/2025", expired:"3/29/2021"},
+];
+
+const achdYears = [2020, 2021, 2022, 2023, 2024, 2025, 2026];
+const achdCounts = achdYears.map(y => ACHD_RAW.filter(r => r.year === y).length);
+const achdGrouped = {};
+achdYears.forEach(y => { achdGrouped[y] = ACHD_RAW.filter(r => r.year === y); });
+
+new Chart(document.getElementById('achdChart'), {
+  type: 'line',
+  data: {
+    labels: achdYears,
+    datasets: [{
+      label: 'Backlogged facilities',
+      data: achdCounts,
+      borderColor: '#0072bc',
+      backgroundColor: 'rgba(0,114,188,0.08)',
+      fill: true,
+      tension: 0.35,
+      pointBackgroundColor: '#0072bc',
+      pointBorderColor: '#ffffff',
+      pointBorderWidth: 2,
+      pointRadius: 7,
+      pointHoverRadius: 9,
+    }]
+  },
+  options: {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      legend: { display: false },
+      tooltip: { enabled: false }
+    },
+    scales: {
+      x: {
+        grid: { color: 'rgba(0,0,0,0.06)' },
+        ticks: { color: '#7a9bbf', font: { family: 'DM Sans, sans-serif', size: 11 }, autoSkip: false },
+        title: { display: true, text: 'Year', color: '#7a9bbf', font: { family: 'DM Sans, sans-serif', size: 11 } }
+      },
+      y: {
+        min: 0,
+        max: 10,
+        grid: { color: 'rgba(0,0,0,0.06)' },
+        ticks: { color: '#7a9bbf', font: { family: 'DM Sans, sans-serif', size: 11 }, stepSize: 2 },
+        title: { display: true, text: 'Backlogged facilities', color: '#7a9bbf', font: { family: 'DM Sans, sans-serif', size: 11 } }
+      }
+    },
+    onClick(evt, elements) {
+      if (!elements.length) return;
+      const yr = achdYears[elements[0].index];
+      const facilities = achdGrouped[yr];
+      document.getElementById('achd-detail-title').textContent =
+        yr + ' — ' + facilities.length + ' backlogged permit' + (facilities.length !== 1 ? 's' : '');
+      document.getElementById('achd-detail-list').innerHTML = facilities.map(f =>
+        '<div style="margin-bottom:6px;">' +
+        '<b>' + f.facility + '</b> (' + f.location + ')<br>' +
+        'Applied: ' + f.submitted + ' &nbsp;|&nbsp; Expired: ' + f.expired +
+        '</div>'
+      ).join('');
+      document.getElementById('achd-detail-box').style.display = 'block';
+    },
+    onHover(evt, elements) {
+      evt.native.target.style.cursor = elements.length ? 'pointer' : 'default';
+    }
+  }
+});
 </script>
 </body>
 </html>
