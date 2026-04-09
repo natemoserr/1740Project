@@ -11,12 +11,6 @@ with open("pa_counties.geojson", "r") as f:
 
 
 
-
-
-
-
-
-
 df = pd.read_csv("Filtered_TitleV_Permits.csv")
 
 app = Dash(__name__)
